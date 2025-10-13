@@ -37,6 +37,7 @@ div.header_links {
   text-transform: capitalize;
   text-shadow: 2mm;
 }
+
 a.header_link {
   text-decoration: none;
   text-shadow: 2px 2px #333;

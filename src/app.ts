@@ -1,6 +1,7 @@
 // app.js (simplified)
 function game_page(): string {
   // Create the canvas dynamically
+  
   const canvas = document.createElement("canvas");
   canvas.id = "gameCanvas";
   canvas.width = 800;
@@ -8,6 +9,7 @@ function game_page(): string {
   canvas.style.background = "black";
   canvas.style.display = "block";
   canvas.style.margin = "0 auto";
+  canvas.style.marginTop = "30px";
 
   // Clear app and append canvas
   const app = document.getElementById("app")!;
@@ -17,16 +19,17 @@ function game_page(): string {
   // Get context
   const ctx = canvas.getContext("2d")!;
 
-  // Game objects
   const paddleWidth = 10, paddleHeight = 100;
-  const player = { x: 20, y: canvas.height / 2 - 50, speed: 5 };
+  const player = { x: 20, y: canvas.height / 2 - 50, speed: 5};
   const ai = { x: canvas.width - 30, y: canvas.height / 2 - 50, speed: 5 };
-  const ball = { x: canvas.width / 2, y: canvas.height / 2, radius: 10, dx: 4, dy: 4 };
+  const ball = { x: canvas.width / 2, y: canvas.height / 2, radius: 10, dx: 1, dy: 0.45, speed: 4};
+  let score = {a: 0, b: 0};
 
   // Keyboard controls
   const keys: { [key: string]: boolean } = {};
   document.addEventListener("keydown", e => keys[e.key] = true);
   document.addEventListener("keyup", e => keys[e.key] = false);
+  
 
   // Draw functions
   function drawRect(x: number, y: number, w: number, h: number, color: string) {
@@ -48,42 +51,56 @@ function game_page(): string {
     }
   }
 
+  function drawNumber(number: number, player: number, fontName: string) {
+        const fontSize = 50;
+        ctx.font = `${fontSize}px ${fontName}`;
+        ctx.fillStyle = 'white';
+
+        const xPos = (player * (canvas.width / 2)) + (canvas.width / 4);
+        const yPos = fontSize + 20;
+        ctx.fillText(number.toString(), xPos, yPos);
+      }
+
   // Game logic
   function movePaddles() {
     if (keys["w"] && player.y > 0) player.y -= player.speed;
     if (keys["s"] && player.y + paddleHeight < canvas.height) player.y += player.speed;
 
-    // Simple AI (follows the ball)
     if (ball.y < ai.y + paddleHeight / 2) ai.y -= ai.speed;
     if (ball.y > ai.y + paddleHeight / 2) ai.y += ai.speed;
   }
 
   function moveBall() {
-    ball.x += ball.dx;
-    ball.y += ball.dy;
+    ball.x += ball.dx * ball.speed;
+    ball.y += ball.dy * ball.speed;
 
     // Top/bottom bounce
-    if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
+    if (ball.y - ball.radius <= 0 || ball.y + ball.radius >= canvas.height) {
       ball.dy *= -1;
     }
 
     // Paddle collisions
-    if (ball.x - ball.radius < player.x + paddleWidth &&
+    if (ball.x - ball.radius <= player.x + paddleWidth &&
         ball.y > player.y && ball.y < player.y + paddleHeight) {
       ball.dx *= -1;
+      let paddleMiddle = player.y + paddleHeight - 50;
+      ball.dy = (ball.y - paddleMiddle) * 0.07;
+
     }
 
     if (ball.x + ball.radius > ai.x &&
         ball.y > ai.y && ball.y < ai.y + paddleHeight) {
       ball.dx *= -1;
+      let paddleMiddle = ai.y + paddleHeight - 50;
+      ball.dy = (ball.y - paddleMiddle) * 0.06;
     }
 
     // Reset if ball goes out
-    if (ball.x < 0 || ball.x > canvas.width) {
+    if (ball.x <= player.x || ball.x >= ai.x) {
       ball.x = canvas.width / 2;
       ball.y = canvas.height / 2;
-      ball.dx = 4 * (Math.random() > 0.5 ? 1 : -1);
-      ball.dy = 4 * (Math.random() > 0.5 ? 1 : -1);
+      ball.dx = (Math.random() > 0.5 ? 1 : -1);
+      ball.dy = (Math.random() > 0.5 ? 1 : -1);
     }
   }
 
@@ -95,10 +112,13 @@ function game_page(): string {
     drawRect(player.x, player.y, paddleWidth, paddleHeight, "white");
     drawRect(ai.x, ai.y, paddleWidth, paddleHeight, "white");
     drawCircle(ball.x, ball.y, ball.radius, "white");
+    drawNumber(score.a, 0, "arial");
+    drawNumber(score.a, 1, "arial");
   }
 
   // 🎮 Game loop
   function gameLoop() {
+
     movePaddles();
     moveBall();
     draw();
