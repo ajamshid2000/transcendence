@@ -1,18 +1,18 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Buttons3.ts                                        :+:      :+:    :+:   */
+/*   Buttons.ts                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ajamshid <ajamshid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/15 15:05:54 by ajamshid          #+#    #+#             */
-/*   Updated: 2025/12/22 17:58:19 by ajamshid         ###   ########.fr       */
+/*   Updated: 2025/12/17 18:43:41 by ajamshid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 import { Button, InputText, Control, TextBlock, StackPanel } from "@babylonjs/gui/2D";
 import { Color3 } from "@babylonjs/core";
-import { thisPlayer, scene, setValues, username, setNewGame } from "../game/Meshes";
+import { thisPlayer, scene, setValues, username } from "../game/Meshes";
 import { movePaddlesAndBalls } from "../game/gameLogic";
 import { setSelectedMesh, createCutomiseUI, createdisposableUI, createTournamentUI, mainUI, multiUI, tournamentUI, resumeUI, disposableUI, contestants, playername, drawText, disposeDUI, disposeTUI, setPlayerCount, setPlayerName, setPause, customiseUI, resetGame } from "./UI"
 
@@ -31,6 +31,7 @@ interface NewGame {
   playerIds?: number[],
   playername: string[]
 }
+
 function buttonStyler(button: Button) {
   button.width = "200px";
   button.height = "70px";
@@ -56,8 +57,7 @@ export function createMainMenuBtn(): Button {
       playername: ["Bot", "Bot"]
     }
     thisPlayer.pause = 0;
-    setNewGame(newGame);
-    // setValues(movePaddlesAndBalls({type:"wsMessage", player:thisPlayer, newGame:newGame}));
+    setValues(movePaddlesAndBalls({type:"wsMessage", player:thisPlayer, newGame:newGame}));
     if (disposableUI) {
       disposeDUI();
     }
@@ -94,8 +94,7 @@ export function createSinglePlayerBtn(): Button {
       mode: 0,
       playername: [username, "Bot"]
     }
-    setNewGame(newGame);
-    // setValues(movePaddlesAndBalls({type:"wsMessage", player:thisPlayer, newGame:newGame}));
+    setValues(movePaddlesAndBalls({type:"wsMessage", player:thisPlayer, newGame:newGame}));
     // playBtn = 1;
     drawText();
     mainUI.rootContainer.isVisible = false;
@@ -143,8 +142,7 @@ export function createTwoPlayerBtn(): Button {
       mode: 0,
       playername: [username, "Player2"]
     }
-    setNewGame(newGame);
-    // setValues(movePaddlesAndBalls({type:"wsMessage", player:thisPlayer, newGame:newGame}));
+    setValues(movePaddlesAndBalls({type:"wsMessage", player:thisPlayer, newGame:newGame}));
     drawText();
     // twoPlayerBtn.metadata.panel.dispose();
     // (twoPlayerBtn.metadata.ui as AdvancedDynamicTexture).dispose();
@@ -270,8 +268,7 @@ export function createStartBtn(): Button {
       mode: 0,
       playername: playername
     }
-    setNewGame(newGame);
-    // setValues(movePaddlesAndBalls({type:"wsMessage", player:thisPlayer, newGame:newGame}));
+    setValues(movePaddlesAndBalls({type:"wsMessage", player:thisPlayer, newGame:newGame}));
     // playername = [contestants[contestantNumber], contestants[contestantNumber + 1]];
     drawText();
 

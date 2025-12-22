@@ -6,11 +6,10 @@
 /*   By: ajamshid <ajamshid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/09 14:01:28 by ajamshid          #+#    #+#             */
-/*   Updated: 2025/12/22 18:00:56 by ajamshid         ###   ########.fr       */
+/*   Updated: 2025/12/17 18:36:52 by ajamshid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-import type { WebSocket as WS } from "ws";
 
 let finalGoal = 1
 const paddleHeight = 100, paddleSpeed = 6;
@@ -58,7 +57,7 @@ interface Player {
   isDragging2: boolean,
   dragPos1: Vec3,
   dragPos2: Vec3,
-  ws?: WS
+  ws?: WebSocket
 }
 
 ///the gid in player should be changed to id in serverside
@@ -67,7 +66,7 @@ let players: { [gameId: number]: Player } = {};
 interface Talker {
   type: "talker",
   gameId: number,
-  // finished: number,
+  finished: number,
   paddles: Paddles,
   ballpos: Vec3,
   counter: number[],
@@ -85,7 +84,7 @@ interface Game {
   gameId: number,
   playerCount: number,
   mode: number,
-  // finished: number,
+  finished: number,
   counter: number[],
   aiDirection: number,
   paddles: Paddles,
@@ -187,11 +186,11 @@ export function moveBall(games: Game): Vec3 {
     else
       games.counter[0]++;
     if (games.counter[0] === finalGoal && playerCount > 0) {
-      // games.finished = 1;
+      games.finished = 1;
       console.log("game finished");
     }
     if (games.counter[1] === finalGoal && playerCount > 0) {
-      // games.finished = 1;
+      games.finished = 1;
       console.log("game finished");
     }
     // drawText();
@@ -292,128 +291,113 @@ function findPlayer(username?: string, gId?: number): number {
   }
   return -1;
 }
-export function removePlayerByWS(ws: WS) {
-  console.log("removebyws called on ")
-  const player: Player | undefined = Object.values(players).find(player => player.ws === ws);
-  console.log("removebyws called on ", player?.username)
-  if (player) {
-    console.log("removeOldAddNewGame calles player, GID ", player.username, gId)
-    const gameIndex = games.findIndex(g => g.gameId === player.gameId);
-    let talkerindex = talkerTemp.findIndex(g => g.gameId === player.gameId);
-    const playerIndex = findPlayer(player.username);
-    if (player.gameId != undefined) {
-      //remove the player from game and see if there are other players on the game
-      games.splice(gameIndex, 1);
-      talkerTemp.splice(talkerindex, 1);
-    }
-    delete players[playerIndex];
-  }
-}
 
 function createNewGame(newGame?: NewGame) {
-  const gameId = gId++;
-
-  games.push({
-    gameId,
-    playerCount: newGame?.playerCount ?? 0,
-    mode: newGame?.mode ?? 0,
-    counter: [0, 0],
-    aiDirection: 0,
-    paddles: { paddle1: 0, paddle2: 0 },
-    balld: {
-      radius: 10,
-      dx: cosDeg(45) * (Math.random() > 0.5 ? 1 : -1),
-      dz: sinDeg(45) * (Math.random() > 0.5 ? 1 : -1),
-      currentSpeed: 3,
-      beginSpeed: 3,
-      speedAfterHit: 6
-    },
-    ballPos: { x: 0, y: 11, z: 0 },
-    playerIds: newGame?.playerIds ?? [0],
-    playername: newGame?.playername ?? ["BOT", "BOT"]
-  });
-
-  const gameindex = games.length - 1;
-
-  talkerTemp.push({
-    type: "talker",
-    gameId,
-    paddles: games[gameindex].paddles,
-    ballpos: games[gameindex].ballPos,
-    counter: games[gameindex].counter,
-    playername: games[gameindex].playername,
-    playerCount: games[gameindex].playerCount
-  });
-
+  console.log("createNewGame called")
+  if (newGame) {
+    console.log("if newGame entered")
+    games.push({
+      gameId: gId,
+      playerCount: newGame.playerCount,
+      mode: newGame.mode,
+      finished: 0,
+      counter: [0, 0],
+      aiDirection: 0,
+      paddles: { paddle1: 0, paddle2: 0 },
+      balld: { radius: 10, dx: cosDeg(45) * (Math.random() > 0.5 ? 1 : -1), dz: sinDeg(45) * (Math.random() > 0.5 ? 1 : -1), currentSpeed: 3, beginSpeed: 3, speedAfterHit: 6 },
+      ballPos: { x: 0, y: 10 + 1, z: 0 },
+      playerIds: newGame.playerIds,
+      playername: newGame.playername
+    })
+  }
+  else {
+    console.log("else entered")
+    games.push({
+      gameId: gId,
+      playerCount: 0,
+      mode: 0,
+      finished: 0,
+      counter: [0, 0],
+      aiDirection: 0,
+      paddles: { paddle1: 0, paddle2: 0 },
+      balld: { radius: 10, dx: cosDeg(45) * (Math.random() > 0.5 ? 1 : -1), dz: sinDeg(45) * (Math.random() > 0.5 ? 1 : -1), currentSpeed: 3, beginSpeed: 3, speedAfterHit: 6 },
+      ballPos: { x: 0, y: 10 + 1, z: 0 },
+      playerIds: [0],
+      playername: ["BOT", "BOT"]
+    });
+  }
+  let gameindex = games.findIndex(g => g.gameId === gId)
+  talkerTemp.push({ type: "talker", gameId: gId, finished: 0, paddles: games[gameindex].paddles, ballpos: games[gameindex].ballPos, counter: games[gameindex].counter, playername: games[gameindex].playername, playerCount: games[gameindex].playerCount })
+  let gameId = gId;
+  gId++;
+  console.log("newGame Pushed")
   return gameId;
 }
 
-
-export function removeOldAddNewGame(player: Player, gId: number) {
+function removeOldAddNewGame(player: Player, gId: number) {
   const gameIndex = games.findIndex(g => g.gameId === player.gameId);
   let talkerindex = talkerTemp.findIndex(g => g.gameId === player.gameId);
-  console.log("removeOldAddNewGame", gameIndex, talkerindex, "calles player, GID ", player.username, gId)
   const playerIndex = findPlayer(player.username);
-  if (gameIndex !== -1) {
+  if (player.gameId != undefined) {
+    //remove the player from game and see if there are other players on the game
     games.splice(gameIndex, 1);
-  }
-
-  if (talkerindex !== -1) {
     talkerTemp.splice(talkerindex, 1);
   }
-  if (gId >= 0)
-    players[playerIndex].gameId = gId;
+  players[playerIndex].gameId = gId;
 }
 
 export function movePaddlesAndBalls(wsMessage: WSMessage) {
   let player: Player = wsMessage.player;
   let newGame: NewGame | undefined = wsMessage.newGame;
   const playerIndex = findPlayer(player.username)
+
+  //create a new game if newgame is passed
   if (newGame && newGame.type == "newGame") {
     console.log("game created new game given", gId);
     const gameId = createNewGame(newGame)
     removeOldAddNewGame(player, gameId);
-    // player.gameId = gameId;
 
-    player.ws?.send(JSON.stringify(talkerTemp[talkerTemp.findIndex(g => g.gameId === gameId)]))
-    return;
+    // return talkerTemp[talkerTemp.findIndex(g => g.gameId === gameId)];
   }
   else if (playerIndex == -1) {
     console.log("game created new user user", playerIndex);
     const gameId = createNewGame()
+
+    // if (Object.keys(players).length == 0)
+    //////players[gId] the gid should be replaced by the id of the player in serverside
     player.gameId = gameId;
     players[gameId] = player
-    return;
+
+    // return talkerTemp[talkerTemp.findIndex(g => g.gameId === gameId)];
   }
   else {
-    players[playerIndex].pause = player.pause;
     players[playerIndex].keys = player.keys;
-    // if(player.pause == 1)
-    //   console.log("palyers pause set to pause")
-    // if(player.pause == 0)
-    //   console.log("palyers pause set to not pause")
-    return;
   }
+
+  // let talkerTempIndexForGame = talkerTemp.findIndex(g => g.gameId === player.gameId)
+  // let gameIndexForGame = games.findIndex(g => g.gameId === player.gameId);
+
+  // if (games[gameIndexForGame].finished == 1 && talkerTemp[talkerTempIndexForGame].finished == 0) {
+  //   talkerTemp[talkerTempIndexForGame].finished = 1;
+  //   return talkerTemp[talkerTempIndexForGame]
+  // }
+  // if (talkerTemp[talkerTempIndexForGame].finished == 0) {
+  //   return talkerTemp[talkerTempIndexForGame];
+  // }
 
 }
 
 setInterval(() => {
-  // console.log("setinterval 60 called")
+  console.log("setinterval 60 called")
   let i = 0;
   while (games.length > i) {
     let talkerindex = talkerTemp.findIndex(g => g.gameId === games[i].gameId)
     let playerIndex = findPlayer(games[i].playername[0])
     if (playerIndex != -1 && players[playerIndex].pause == 1) {
-      console.log("game paused", i, "  ", talkerindex);
+      console.log("game paused");
       i++;
-      continue;
+      continue
     }
-    // console.log("game not paused", i, "  ", talkerindex);
-    // console.log("game id and talker id", i, "  ", talkerindex);
-
-    // if (games[i].finished == 1)
-    //   continue;
-    // if (games[i].counter[0] == finalGoal || games[i].counter[1] == finalGoal)
     games[i].paddles = movePaddles(games[i]);
     games[i].ballPos = moveBall(games[i]);
     talkerTemp[talkerindex].paddles = games[i].paddles
@@ -423,9 +407,6 @@ setInterval(() => {
     let j = findPlayer(games[i].playername[0])
     if (j != -1) {
       players[j].ws?.send(JSON.stringify(talkerTemp[talkerindex]));
-      if (talkerTemp[talkerindex].counter[0] >= finalGoal || talkerTemp[talkerindex].counter[1] >= finalGoal)
-        removeOldAddNewGame(players[playerIndex], -1);
-      break;
     }
     if (games[i].mode == 0) {
       let playerIndex = findPlayer(undefined, games[i].gameId);
@@ -434,30 +415,17 @@ setInterval(() => {
       }
       else {
         players[playerIndex].ws?.send(JSON.stringify(talkerTemp[talkerindex]));
-        if (talkerTemp[talkerindex].counter[0] >= finalGoal || talkerTemp[talkerindex].counter[1] >= finalGoal)
-          removeOldAddNewGame(players[playerIndex], -1);
-        break;
       }
     }
-
-    // console.log("game id and talker id", i, "  ", talkerindex);
-
-    // if (games[i].counter[0] == finalGoal || games[i].counter[1] == finalGoal)
-    //   games[i].finished = 1;
     console.log(i, talkerindex)
     i++;
   }
   i = 0;
 }, 1000 / 60);
 
-// if(talkerTemp[talkerindex].counter[0] >= finalGoal || talkerTemp[talkerindex].counter[1] >= finalGoal)
-//             removeOldAddNewGame(players[playerIndex], undefined);
-//       console.log("game id and talker id", i, "  ", talkerindex);
-
 // 1 second loop
 setInterval(() => {
   games.forEach(game => {
-    // if (game.finished != 1)
     game.aiDirection = AIDirection(game);
   });
 }, 1000);

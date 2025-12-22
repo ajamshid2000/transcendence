@@ -34,7 +34,7 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
 
   console.log(`${method} ${url}`);
 
-  const route = url.split("?")[0];
+    const route = url.split("?")[0];
 
   // --- Instrumentation Prometheus ---
   if (route !== "/metrics") {
@@ -145,7 +145,7 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
           res.end(JSON.stringify({ error: "Invalid content" }));
           return;
         }
-
+          
         const saved = db.addMessage(content, id);
 
         // 🔥 Broadcast WebSocket
@@ -220,7 +220,7 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
     if (req.url === "/api/getuser" && req.method === "POST") {
       const body = await getRequestBody(req);
       console.log("body: ", body);
-      const id = body.id;
+      const id  = body.id;
       console.log("id: ", id);
       const user = id > 0 ? db.getUserById(id) : "Invité.e";
       console.log("user: ", user);
@@ -283,13 +283,10 @@ wss.on("connection", (ws) => {
       return;
     }
 
-    // console.log("recieved message of type", message.type);
-
     switch (message.type) {
       case "wsMessage":
         message.player.ws = ws;
         a.movePaddlesAndBalls(message);
-        // console.log("ws message recieved", message);
         break;
 
       case "newGame":
@@ -302,12 +299,12 @@ wss.on("connection", (ws) => {
   });
 
   ws.on("close", () => {
-    const player = a.removePlayerByWS(ws);
+    console.log("Client déconnecté");
   });
 });
 
 
 // --- DÉMARRAGE ---
-server.listen(port, '0.0.0.0', () => {
-  console.log(`Backend running on http://0.0.0.0:${port}`);
+server.listen(port, () => {
+  console.log(`Backend running on http://localhost:${port}`);
 });

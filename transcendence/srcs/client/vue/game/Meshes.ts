@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Meshes3.ts                                         :+:      :+:    :+:   */
+/*   Meshes.ts                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ajamshid <ajamshid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/09 14:01:28 by ajamshid          #+#    #+#             */
-/*   Updated: 2025/12/22 17:58:12 by ajamshid         ###   ########.fr       */
+/*   Updated: 2025/12/22 18:08:00 by ajamshid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ export let isDragging1 = false;
 export let dragPos2 = new Vector3(0, 0, 0);
 export let isDragging2 = false;
 export let counter = [0, 0];
-export let username = undefined;
+export let username = "player";
 let usernameWait = 0;
 export let thisNewGame: NewGame | undefined = undefined;
 
@@ -281,13 +281,6 @@ export function pong(): string {
 
   // WebSocket handlers (only once)
   ws.onopen = () => {
-    ws.send(
-      JSON.stringify({
-        type: "wsMessage",
-        player: thisPlayer,
-        newGame: thisNewGame
-      })
-    );
   };
 
   ws.onmessage = (event) => {
@@ -302,11 +295,6 @@ export function pong(): string {
     if (message.type === "talker") {
       // console.log("talker received");
       setValues(message);
-    }
-    if (message.type === "Player") {
-      thisPlayer.username = message.username;
-      username = message.username;
-      console.log("user name is set to ", thisPlayer.username);
     }
 
     if (message.type === "welcome")
@@ -334,27 +322,9 @@ export function pong(): string {
     resetGame(scene);
     createUI();
     drawText();
-
-    // Render loop
-    // await waitForOpen(ws);
-    // if (ws.readyState === WebSocket.OPEN) {
-    //   ws.send(
-    //     JSON.stringify({
-    //       type: "wsMessage",
-    //       player: thisPlayer,
-    //       newGame: thisNewGame
-    //     })
-    //   );
-    // }
-
     engine.runRenderLoop(() => {
       scene.render();
-      // console.log("came in render");
-      // if(thisPlayer.username)
-      //   console.log("has username");
-      // if(ws.readyState === WebSocket.OPEN )
-      //   console.log("is open"); 
-      if (ws.readyState === WebSocket.OPEN && thisPlayer.username != undefined) {
+      if (ws.readyState === WebSocket.OPEN) {
         ws.send(
           JSON.stringify({
             type: "wsMessage",

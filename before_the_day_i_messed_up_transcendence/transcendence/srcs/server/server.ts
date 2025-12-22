@@ -283,13 +283,13 @@ wss.on("connection", (ws) => {
       return;
     }
 
-    // console.log("recieved message of type", message.type);
+    console.log("recieved message of type", message.type);
 
     switch (message.type) {
       case "wsMessage":
         message.player.ws = ws;
         a.movePaddlesAndBalls(message);
-        // console.log("ws message recieved", message);
+        console.log("ws message recieved");
         break;
 
       case "newGame":

@@ -6,7 +6,7 @@
 /*   By: ajamshid <ajamshid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 16:17:53 by ajamshid          #+#    #+#             */
-/*   Updated: 2025/12/22 17:58:25 by ajamshid         ###   ########.fr       */
+/*   Updated: 2025/12/17 18:36:16 by ajamshid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -228,12 +228,12 @@ export function createUI() {
   }
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
-      if (playerCount > 0 && thisPlayer.gameId) {
-        console.log(thisPlayer.gameId);
-        resumeUI.rootContainer.isVisible = true;
-        resumeUI.isForeground = true;
-        thisPlayer.pause = 1;
-        console.log("pause set to 1")
+      if(playerCount > 0 && pause == 0){
+      resumeUI.rootContainer.isVisible = true;
+      resumeUI.isForeground = true;
+      setPause(1);
+      thisPlayer.pause = 1;
+      console.log("pause set to 1")
       }
     }
   });
@@ -273,9 +273,9 @@ export function createdisposableUI(type: number) {
   disposableUI = AdvancedDynamicTexture.CreateFullscreenUI("statsUI");
   disposableUI.background = "rgba(13, 0, 48, 0.5)";
   const statsPanel = new StackPanel();
-  console.log("contestantS ", contestants);
-  console.log("counter ", counter);
-  console.log("contestants length ", contestants.length)
+  console.log("contestantS ",contestants);
+  console.log("counter ",counter);
+  console.log("contestants length ",contestants.length)
   if (counter[0] == finalGoal) {
     text = createTextBlock(playername[0] + " Won the game!");
     if (contestants.length >= 2) {
@@ -290,7 +290,7 @@ export function createdisposableUI(type: number) {
       contestantNumber++;
     }
   }
-
+  
   statsPanel.width = "300px";
   statsPanel.isVertical = true;
   if (text)
@@ -312,7 +312,7 @@ export function createdisposableUI(type: number) {
     //   playername: playername
     // }
     // setValues(movePaddlesAndBalls(thisPlayer, newGame));
-
+    
     if (text == undefined) {
       text = createTextBlock(`${contestants[contestantNumber]} VS ${contestants[contestantNumber + 1]}`);
       disposableUI.addControl(text);
@@ -365,7 +365,7 @@ export function createCutomiseUI() {
   customiseUI.addControl(picker);
 
   // selectortPanel.addControl(startTournamentBtn);
-  selectortPanel.addControl(cyber);
+    selectortPanel.addControl(cyber);
   selectortPanel.addControl(natural);
   selectortPanel.addControl(ballBtn);
   selectortPanel.addControl(wallBtn);
@@ -380,10 +380,10 @@ function observerBodyColor(value: any, state: any) {
     console.log("selected mesh changing color");
     let dC = selectedMesh.material.diffuseColor;
     let eC = selectedMesh.material.emissiveColor;
-    if (dC.r == 0 && dC.r == 0 && dC.r == 0) {
+    if(dC.r == 0 && dC.r == 0 && dC.r == 0){
       selectedMesh.material.emissiveColor = value.clone();
     }
-    if (eC.r == 0 && eC.r == 0 && eC.r == 0) {
+    if(eC.r == 0 && eC.r == 0 && eC.r == 0){
       selectedMesh.material.diffuseColor = value.clone();
     }
   }

@@ -1,0 +1,12 @@
+# À ne pas push pour des questions de sécurité
+
+.env
+.script_merging
+.script_main_merging
+srcs/public/.vite
+
+# Database
+
+srcs/config/database/data
+
+# Autres

@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Meshes3.ts                                         :+:      :+:    :+:   */
+/*   Meshes.ts                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ajamshid <ajamshid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/09 14:01:28 by ajamshid          #+#    #+#             */
-/*   Updated: 2025/12/22 17:58:12 by ajamshid         ###   ########.fr       */
+/*   Updated: 2025/12/17 18:48:59 by ajamshid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,9 +21,7 @@ export let isDragging1 = false;
 export let dragPos2 = new Vector3(0, 0, 0);
 export let isDragging2 = false;
 export let counter = [0, 0];
-export let username = undefined;
-let usernameWait = 0;
-export let thisNewGame: NewGame | undefined = undefined;
+export let username = "player";
 
 const paddleWidth = 10, paddleHeight = 100;
 const wallHeight = 20;
@@ -65,7 +63,7 @@ interface Talker {
 
 interface Player {
   type: "Player",
-  username: string | undefined,
+  username: string,
   gameId?: number,
   keys: any,
   pause: number,
@@ -76,6 +74,7 @@ interface Player {
   ws?: WebSocket
 }
 
+export let thisNewGame: NewGame | undefined = undefined;
 interface NewGame {
   type: "newGame",
   playerCount: number,
@@ -89,26 +88,23 @@ export function setNewGame(newGameGiven: NewGame) {
   console.log("newgame set with ", thisNewGame.type);
 }
 
+
 export function setValues(input: Talker | undefined) {
   if (input == undefined)
     return;
   counter = [...input.counter];
   setPlayerName([...input.playername]);
   drawText();
-  if (input.playerCount > 0 && (counter[0] == finalGoal || counter[1] == finalGoal)) {
-    thisPlayer.gameId = undefined;
-    console.log(thisPlayer.gameId);
+  if (input.playerCount > 0 && (counter[0] == finalGoal || counter[1] == finalGoal))
     createdisposableUI(0);
-    return;
-  }
   // console.log("setVAlues called");
   scene.getMeshByName("paddle1").position.z = input.paddles.paddle1;
   scene.getMeshByName("paddle2").position.z = input.paddles.paddle2;
   scene.getMeshByName("ball").position = new Vector3(input.ballpos.x, input.ballpos.y, input.ballpos.z);
   thisPlayer.gameId = input.gameId;
+
+
 }
-
-
 
 export const keys: { [key: string]: boolean } = {};
 document.addEventListener("keydown", e => keys[e.key] = true);
@@ -202,10 +198,16 @@ function createMeshes(scene: any) {
   const particleSystem = new ParticleSystem("trail", 2000, scene);
   particleSystem.particleTexture = new Texture("textures/flare.png", scene);
   particleSystem.emitter = ball;
+  // particleSystem.minEmitBox = new Vector3(0, 0, 0);
+  // particleSystem.maxEmitBox = new Vector3(0, 0, 0);
   particleSystem.minSize = 1;
   particleSystem.maxSize = 15;
   particleSystem.emitRate = 1000;
+  // particleSystem.color = new Color4(0, 0, 1, 1);
+  // particleSystem.color2 = new Color4(1, 0, 0, 1);
   particleSystem.blendMode = ParticleSystem.BLENDMODE_ADD;
+  // particleSystem.direction1 = new Vector3(0, 0, 0);
+  // particleSystem.direction2 = new Vector3(0, 0, 0);
   particleSystem.minLifeTime = 0.1;
   particleSystem.maxLifeTime = 0.3;
   particleSystem.start();
@@ -253,6 +255,10 @@ drag2.onDragEndObservable.add(() => {
   console.log("is dragging 21");
 });
 
+
+// export let thisPlayer: Player = { type: "Player", username: username, keys: keys, pause: 0 }
+// const ws = new WebSocket("ws://localhost:8443");
+
 export let thisPlayer: Player = {
   type: "Player",
   username: username,
@@ -267,12 +273,13 @@ export let thisPlayer: Player = {
 function setThisPlayer() {
   thisPlayer.username = username,
     thisPlayer.keys = keys,
-    thisPlayer.pause = thisPlayer.pause,
+    thisPlayer.pause = 0,
     thisPlayer.isDragging1 = isDragging1,
     thisPlayer.isDragging2 = isDragging2,
     thisPlayer.dragPos1 = { x: dragPos1.x, y: dragPos1.y, z: dragPos1.z },
     thisPlayer.dragPos2 = { x: dragPos2.x, y: dragPos2.y, z: dragPos2.z }
 }
+
 
 
 export function pong(): string {
@@ -281,13 +288,7 @@ export function pong(): string {
 
   // WebSocket handlers (only once)
   ws.onopen = () => {
-    ws.send(
-      JSON.stringify({
-        type: "wsMessage",
-        player: thisPlayer,
-        newGame: thisNewGame
-      })
-    );
+    console.log("Connected to WS");
   };
 
   ws.onmessage = (event) => {
@@ -300,17 +301,9 @@ export function pong(): string {
     }
 
     if (message.type === "talker") {
-      // console.log("talker received");
+      console.log("talker received");
       setValues(message);
     }
-    if (message.type === "Player") {
-      thisPlayer.username = message.username;
-      username = message.username;
-      console.log("user name is set to ", thisPlayer.username);
-    }
-
-    if (message.type === "welcome")
-      console.log(message)
   };
 
   ws.onerror = (err) => {
@@ -323,8 +316,7 @@ export function pong(): string {
 
   resetGame();
 
-
-  async function play() {
+  function play() {
     if (!app.contains(canvas)) app.appendChild(canvas);
 
     engine = new Engine(canvas, true);
@@ -336,38 +328,29 @@ export function pong(): string {
     drawText();
 
     // Render loop
-    // await waitForOpen(ws);
-    // if (ws.readyState === WebSocket.OPEN) {
-    //   ws.send(
-    //     JSON.stringify({
-    //       type: "wsMessage",
-    //       player: thisPlayer,
-    //       newGame: thisNewGame
-    //     })
-    //   );
-    // }
-
     engine.runRenderLoop(() => {
       scene.render();
-      // console.log("came in render");
-      // if(thisPlayer.username)
-      //   console.log("has username");
-      // if(ws.readyState === WebSocket.OPEN )
-      //   console.log("is open"); 
-      if (ws.readyState === WebSocket.OPEN && thisPlayer.username != undefined) {
+
+      // Send WS updates safely
+      if (
+        ws.readyState === WebSocket.OPEN &&
+        counter[0] < finalGoal &&
+        counter[1] < finalGoal
+      ) {
         ws.send(
           JSON.stringify({
             type: "wsMessage",
             player: thisPlayer,
-            newGame: thisNewGame
+            // newGame: thisNewGame
           })
         );
-        console.log("newgame sent");
-        if (thisNewGame) {
-          thisNewGame = undefined;
-          // console.log("newgame sent");
-        }
+        // if (thisNewGame) {
+        //   thisNewGame = undefined;
+        //   // console.log("newgame sent");
+        // }
+
         setThisPlayer();
+        // Optional: setValues(movePaddlesAndBalls({ type: "wsMessage", player: thisPlayer }));
       }
     });
 
